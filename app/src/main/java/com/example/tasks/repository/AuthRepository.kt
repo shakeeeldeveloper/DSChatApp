@@ -82,4 +82,4 @@ class AuthRepository {
 
     fun isUserLoggedIn(): Boolean = auth.currentUser != null
     fun getCurrentUserId(): String? = auth.currentUser?.uid
-}`1
+}

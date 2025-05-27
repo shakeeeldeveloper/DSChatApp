@@ -48,14 +48,13 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnLogout.setOnClickListener {
 
-                // Firebase sign out
+
                 auth.signOut()
 
-                // Google sign out
+
                 googleSignInClient.signOut().addOnCompleteListener {
                     Toast.makeText(this, "Signed out", Toast.LENGTH_SHORT).show()
 
-                    // Redirect to login screen
                     startActivity(Intent(this, LoginActivity::class.java))
                     finish()
                 }
