@@ -34,9 +34,11 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var btnGoogleSignIn: SignInButton
     private lateinit var tvSignup: TextView
 
+    private lateinit var binding: ActivityLoginBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
+
 
         initViews()
         val existingAccount = GoogleSignIn.getLastSignedInAccount(this)
@@ -48,7 +50,7 @@ class LoginActivity : AppCompatActivity() {
         setupGoogleSignIn()
         setupListeners()
 
-        viewModel = ViewModelProvider(this)[AuthViewModel::class.java]
+    //    viewModel = ViewModelProvider(this)[AuthViewModel::class.java]
 
         observeViewModel()
 
@@ -56,12 +58,15 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
-        etEmail = findViewById(R.id.etUsernamePhone)
+        binding= ActivityLoginBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        viewModel = ViewModelProvider(this)[AuthViewModel::class.java]
+       /* etEmail = findViewById(R.id.etUsernamePhone)
         etPassword = findViewById(R.id.etPassword)
         ivTogglePassword = findViewById(R.id.ivTogglePassword)
         btnLogin = findViewById(R.id.btnManualLogin)
         btnGoogleSignIn = findViewById(R.id.btnGoogleSignIn)
-        tvSignup = findViewById(R.id.tvSignup)
+        tvSignup = findViewById(R.id.tvSignup)*/
     }
 
     private fun setupGoogleSignIn() {
@@ -74,8 +79,9 @@ class LoginActivity : AppCompatActivity() {
 
     private fun setupListeners() {
         btnLogin.setOnClickListener {
-            val email = etEmail.text.toString().trim()
-            val password = etPassword.text.toString().trim()
+            val email = binding.etUsernamePhone.text.toString().trim()
+            val password = binding.etPassword.text.toString().trim()
+
             if (email.isEmpty() || password.isEmpty()) {
                 toast("Email and password are required")
             } else {
@@ -99,14 +105,14 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun togglePasswordVisibility() {
-        if (etPassword.inputType == InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD) {
-            etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-            ivTogglePassword.setImageResource(R.drawable.hide_pswd)
+        if (binding.etPassword.inputType == InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD) {
+            binding.etPassword.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            binding.ivTogglePassword.setImageResource(R.drawable.hide_pswd)
         } else {
-            etPassword.inputType = InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-            ivTogglePassword.setImageResource(R.drawable.show_pswd)
+            binding.etPassword.inputType = InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+            binding.ivTogglePassword.setImageResource(R.drawable.show_pswd)
         }
-        etPassword.setSelection(etPassword.text.length)
+        binding.etPassword.setSelection(etPassword.text.length)
     }
 
     private fun observeViewModel() {
