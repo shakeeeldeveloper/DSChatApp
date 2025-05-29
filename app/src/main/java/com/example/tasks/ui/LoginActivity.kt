@@ -102,7 +102,8 @@ class LoginActivity : AppCompatActivity() {
             if (email.isEmpty() || password.isEmpty()) {
                 toast("Email and password are required")
             } else {
-              viewModel.loginWithEmail(email, password)
+                toast("Login press")
+              viewModel.manualLogin(email, password)
             }
         }
 
@@ -159,6 +160,64 @@ class LoginActivity : AppCompatActivity() {
                 toast("Login failed: $errorMsg")
             }
         }
+
+
+       /* viewModel.signInStatus.observe(this) { (success, errorMsg) ->
+            if (success) {
+                toast("Login Successful")
+
+                */
+        /*with(sharedPreferences.edit()) {
+                    // putBoolean(IS_LOGGED_IN, true)
+                    val gson = Gson()
+                    val userJson = gson.toJson(viewModel.getCurrentUser())
+                    putString("user_data", userJson)
+                    apply()
+                    startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                }*//*
+                *//*  val intent = Intent(this, MainActivity::class.java)
+
+                  with(intent){
+                      putExtra("IS_LOGGED_IN",true)
+                      putExtra("user_data", viewModel.getCurrentUser())
+                      putExtra("login_source","google")
+                      startActivity(intent)
+                      finish()
+                  }*//*
+
+            } else {
+                toast("Login failed: $errorMsg")
+            }
+        }*/
+
+
+        viewModel.loginResult.observe(this) { (success, errorMsg,user) ->
+            if (success) {
+                toast("Login Successful   ${user?.fullName}")
+
+                with(sharedPreferences.edit()) {
+                    // putBoolean(IS_LOGGED_IN, true)
+                    val gson = Gson()
+                    val userJson = gson.toJson(user)
+                    putString("user_data", userJson)
+                    apply()
+                    startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                }
+                /*  val intent = Intent(this, MainActivity::class.java)
+
+                  with(intent){
+                      putExtra("IS_LOGGED_IN",true)
+                      putExtra("user_data", viewModel.getCurrentUser())
+                      putExtra("login_source","google")
+                      startActivity(intent)
+                      finish()
+                  }*/
+
+            } else {
+                toast("Login failed: $errorMsg")
+            }
+        }
+
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

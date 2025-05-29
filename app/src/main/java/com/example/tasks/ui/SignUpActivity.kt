@@ -1,5 +1,7 @@
 package com.example.tasks.ui
 
+import android.R.id.message
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -13,10 +15,14 @@ import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import com.example.tasks.R
 import com.example.tasks.databinding.ActivitySignUpBinding
+import com.example.tasks.model.User
+import com.example.tasks.ui.LoginActivity
 import com.example.tasks.viewmodel.AuthViewModel
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.ktx.storage
+import com.google.gson.Gson
+import java.nio.file.Files.exists
 import java.util.UUID
 
 class SignUpActivity : AppCompatActivity() {
@@ -24,9 +30,16 @@ class SignUpActivity : AppCompatActivity() {
     private lateinit var viewModel: AuthViewModel
     private lateinit var binding: ActivitySignUpBinding
     private lateinit var selectedImageUri: Uri
+    private lateinit var newUser: User
+
+    private lateinit var sharedPreferences: android.content.SharedPreferences
+
+
+
     private val PICK_IMAGE_REQUEST = 1001
     val storage = FirebaseStorage.getInstance()
     val storageRef = storage.reference
+
    // private val storageReference = Firebase.storage.reference
 
     val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -49,16 +62,65 @@ class SignUpActivity : AppCompatActivity() {
         setContentView(binding.root)
 
 
-
+        observeViewModel()
         setupListeners()
 
 
     }
+   private fun observeViewModel() {
+       viewModel.emailExists.observe(this) { exists ->
+           if (exists) {
+               toast("Email already exists.")
+           } else {
+               toast("Email is available.")
+               // TODO: Proceed with signup (e.g., call createUser function)
+           }
+       }
+       viewModel.signUpStatus.observe(this) { (success, message, user) ->
+           if (success) {
+               toast("Signup Successful")
+               with(sharedPreferences.edit()) {
+                   // putBoolean(IS_LOGGED_IN, true)
+                   val gson = Gson()
+                   val userJson = gson.toJson(user)
+                   putString("user_data", userJson)
+                   apply()
+                   startActivity(Intent(this@SignUpActivity, MainActivity::class.java))
+               }
+
+           } else {
+               toast("Signup failed: $message")
+           }
+       }
+    }
 
     private fun setupListeners() {
         binding.btnSignup.setOnClickListener {
+            val fullName = binding.etFullName.text.toString().trim()
+            val phone = binding.etPhone.text.toString().trim()
+            val password = binding.etPassword.text.toString().trim()
+            val email = binding.etEmail.text.toString().trim()
+            val profileUrl="https://lh3.googleusercontent.com/a/ACg8ocIyhh-g0WjszvTknALZeuYwZ0hki6olfnrWl7MvIp23hK1llg=s96-c"
+
+             newUser = User(
+                email = email,
+                fullName = fullName,
+                password = password,
+                phone = phone,
+                profilePicUrl=profileUrl,
+                status = "online"
+
+            )
+            if (email.isNotEmpty() && password.isNotEmpty() && fullName.isNotEmpty()) {
+                viewModel.checkEmailExist(email, newUser )
+
+
+            } else {
+                toast("Please fill all required fields")
+            }
 
         }
+
 
         binding.ivProfile.setOnClickListener {
            // viewModel = ViewModelProvider(this)[AuthViewModel::class.java]
@@ -78,6 +140,8 @@ class SignUpActivity : AppCompatActivity() {
     private fun initViews() {
 
         viewModel = ViewModelProvider(this)[AuthViewModel::class.java]
+        sharedPreferences = getSharedPreferences("UserPref", Context.MODE_PRIVATE)
+
 
 
 

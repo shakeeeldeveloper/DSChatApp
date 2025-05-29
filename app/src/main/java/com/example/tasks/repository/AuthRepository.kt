@@ -23,6 +23,28 @@ class AuthRepository {
 
 
 
+    fun signUpWithEmail(
+        user: User,
+        callback: (Boolean, String?, User?) -> Unit
+    ) {
+        auth.createUserWithEmailAndPassword(user.email, user.password)
+            .addOnCompleteListener { authTask ->
+                if (authTask.isSuccessful) {
+                    val uid = auth.currentUser?.uid ?: return@addOnCompleteListener
+                    val userWithId = user.copy(uid = uid)
+
+
+                        dbRef.child(uid).setValue(userWithId)
+                            .addOnSuccessListener { callback(true, null,userWithId) }
+                            .addOnFailureListener { callback(false, it.message,userWithId) }
+
+
+                } else {
+                    callback(false, authTask.exception?.message,user)
+                }
+            }
+    }
+
 
     fun uploadProfileImg(uid: String, imgUrl: Uri, activity: SignUpActivity){
 
@@ -75,7 +97,7 @@ class AuthRepository {
         }.addOnFailureListener {  e -> Log.d("firebase","status failed $e.message")}
     }
 
-    fun signUpWithEmail(
+   /* fun signUpWithEmail(
         email: String,
         password: String,
         fullName: String,
@@ -104,8 +126,42 @@ class AuthRepository {
                     onResult(false, task.exception?.message)
                 }
             }
-    }
+    }*/
 
+    fun manualLogin(email: String,password: String, callback: (Boolean, String?, User?) -> Unit){
+
+        dbRef.get().addOnSuccessListener { snapshot ->
+            var exists = false
+            user=User(uid = "",
+             email = "",
+            fullName = "",
+           password = "",
+             profilePicUrl = "",
+            phone = "",
+          status = "")
+            for (userSnapshot in snapshot.children) {
+
+                val userEmail = userSnapshot.child("email").getValue(String::class.java)
+                var userPassword=userSnapshot.child("password").getValue(String::class.java)
+
+
+                if (userEmail.equals(email, ignoreCase = true) ) {
+                    if (userPassword.equals(password)) {
+                        exists = true
+
+                        user = userSnapshot.getValue(User::class.java)!!
+
+                        dbRef.child(user.uid).child("status").setValue("online")
+                        break
+                    }
+                }
+            }
+            callback(exists,"success",user)
+        }.addOnFailureListener {
+            callback(false,"failed",user)
+        }
+
+    }
     fun loginWithEmail(email: String, password: String, onResult: (Boolean, String?) -> Unit) {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
@@ -114,6 +170,8 @@ class AuthRepository {
                 } else {
                     onResult(false, task.exception?.message)
                 }
+            }.addOnFailureListener { task ->
+                onResult(false, task.message)
             }
     }
 
@@ -148,6 +206,41 @@ class AuthRepository {
             Log.d("firebase","status changed")
         }.addOnFailureListener {  e -> Log.d("firebase","status failed $e.message")}
 
+    }
+    fun checkEmailExistsInAuth(email: String, callback: (Boolean) -> Unit) {
+        auth.fetchSignInMethodsForEmail(email)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val signInMethods = task.result?.signInMethods
+                    callback(!signInMethods.isNullOrEmpty())
+                } else {
+                    callback(false)
+                }
+            }
+    }
+
+    fun checkEmailExistsInDatabase(email: String, callback: (Boolean) -> Unit) {
+        dbRef.get().addOnSuccessListener { snapshot ->
+            var exists = false
+            for (userSnapshot in snapshot.children) {
+                val userEmail = userSnapshot.child("email").getValue(String::class.java)
+                if (userEmail.equals(email, ignoreCase = true)) {
+                    exists = true
+                    break
+                }
+            }
+            callback(exists)
+        }.addOnFailureListener {
+            callback(false)
+        }
+    }
+
+    fun checkEmailExistsEverywhere(email: String, result: (Boolean) -> Unit) {
+        checkEmailExistsInAuth(email) { inAuth ->
+            checkEmailExistsInDatabase(email) { inDb ->
+                result(inAuth || inDb)
+            }
+        }
     }
 
 

@@ -16,21 +16,34 @@ class AuthViewModel : ViewModel() {
     private val _authStatus = MutableLiveData<Pair<Boolean, String?>>()
     val authStatus: LiveData<Pair<Boolean, String?>> = _authStatus
 
-    fun registerWithEmail(
-        email: String,
-        password: String,
-        fullName: String,
-        phone: String,
-        profilePicUrl: String
+    private val _signUpStatus = MutableLiveData<Triple<Boolean, String?, User?>>()
+    val signUpStatus: LiveData<Triple<Boolean, String?, User?>> = _signUpStatus
+
+    private val _loginResult = MutableLiveData<Triple<Boolean, String?, User?>>()
+    val loginResult: LiveData<Triple<Boolean, String?, User?>> = _loginResult
+
+    private val _signInStatus = MutableLiveData<Pair<Boolean, String?>>()
+    val signInStatus: LiveData<Pair<Boolean, String?>> = _signInStatus
+
+    private val _emailExists = MutableLiveData<Boolean>()
+    val emailExists: LiveData<Boolean> = _emailExists
+
+    /*fun registerWithEmail(
+        user: User
     ) {
-        authRepo.signUpWithEmail(email, password, fullName,  phone,profilePicUrl) { success, error ->
+        authRepo.signUpWithEmail(user) { success, error ->
             _authStatus.value = Pair(success, error)
         }
-    }
+    }*/
 
-    fun loginWithEmail(email: String, password: String) {
+   /* fun loginWithEmail(email: String, password: String) {
         authRepo.loginWithEmail(email, password) { success, error ->
-            _authStatus.value = Pair(success, error)
+            _signInStatus.value = Pair(success, error)
+        }
+    }*/
+    fun manualLogin(email: String, password: String) {
+        authRepo.manualLogin(email, password) { success, error, user ->
+            _loginResult.postValue(Triple(success, error, user))
         }
     }
 
@@ -38,6 +51,27 @@ class AuthViewModel : ViewModel() {
         authRepo.signInWithGoogle(account) { success, error ->
             _authStatus.value = Pair(success, error)
            // user= authRepo.getCurrentUser()!!
+        }
+    }
+    fun checkEmailExist(email: String,user: User){
+
+        authRepo.checkEmailExistsEverywhere(email) { exists ->
+            if (exists) {
+                // Email already exists
+                _emailExists.value = exists
+            } else {
+                // Email free, proceed with registration
+                authRepo.signUpWithEmail(user) { success, error,user ->
+                    _signUpStatus.postValue(Triple(success, error, user))
+                }
+            }
+        }
+
+
+
+
+        authRepo.checkEmailExistsEverywhere(email) { exists ->
+            _emailExists.value=exists
         }
     }
     fun uploadProfileImg(uid: String, uri: Uri, activity: SignUpActivity){
