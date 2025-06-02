@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import com.example.tasks.databinding.ActivityMainBinding
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -16,8 +17,11 @@ import com.example.tasks.model.User
 import com.google.gson.Gson
 import androidx.core.content.edit
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+import com.example.tasks.adapters.ChatListAdapter
 import com.example.tasks.viewmodel.AuthViewModel
+import com.example.tasks.viewmodel.ChatListViewModel
 
 
 class MainActivity : AppCompatActivity() {
@@ -28,6 +32,8 @@ class MainActivity : AppCompatActivity() {
 
 
     private lateinit var viewModel: AuthViewModel
+    private lateinit var chatListViewModel: ChatListViewModel
+
     // Firebase
     private lateinit var auth: FirebaseAuth
 
@@ -37,7 +43,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var binding: ActivityMainBinding
-    private lateinit var user: User
+    private lateinit var currentUser: User
+    private lateinit var adapter: ChatListAdapter
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,17 +57,47 @@ class MainActivity : AppCompatActivity() {
 
         initViews()
         clickListener()
+        setupRecyclerView()
+        observeViewModel()
+
+
 
 
 
 
     }
+
+    private fun observeViewModel() {
+        chatListViewModel.chatList.observe(this) { chatUsers ->
+            adapter.submitList(chatUsers)
+        }
+    }
+
+    private fun setupRecyclerView() {
+        adapter = ChatListAdapter { user ->
+
+
+            val intent = Intent(this, ChatActivity::class.java)
+            intent.putExtra("receiverId", user.uid)
+            intent.putExtra("currentUser",currentUser.uid)
+            startActivity(intent)
+        }
+
+        binding.chatListRV.layoutManager = LinearLayoutManager(this)
+        binding.chatListRV.adapter = adapter
+    }
+
     fun initViews(){
 
-        user=getUser(this@MainActivity)!!
-        user.let {
-            binding.tvWelcome.text="${user.fullName.toString()}"
+        currentUser=getUser(this@MainActivity)!!
+        currentUser.let {
+            binding.tvWelcome.text="${currentUser.fullName.toString()}"
         }
+        chatListViewModel = ViewModelProvider(this)[ChatListViewModel::class.java]
+
+        //val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        chatListViewModel.loadChatList(currentUser.uid)
+
 
 
 
@@ -69,7 +107,7 @@ class MainActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
 
         Glide.with(this)
-            .load(user.profilePicUrl) // can be Uri, File, or URL
+            .load(currentUser.profilePicUrl) // can be Uri, File, or URL
             .circleCrop()
             .placeholder(R.drawable.devsky_logo)
             .into(binding.imageProfile)
@@ -89,13 +127,22 @@ class MainActivity : AppCompatActivity() {
 
             googleSignInClient.signOut().addOnCompleteListener {
                 clearUser(this@MainActivity)
-                viewModel.logOut(user.uid)
+                viewModel.logOut(currentUser.uid)
                 startActivity(Intent(this, LoginActivity::class.java))
                 finish()
             }
         }
     }
+    fun parseUser(context: Context, user: User): User? {
+        val gson = Gson()
+        val json = sharedPreferences.getString("user_data", null)
 
+        return if (json != null) {
+            gson.fromJson(json, User::class.java) // Convert JSON back to User
+        } else {
+            null
+        }
+    }
     fun getUser(context: Context): User? {
         val sharedPreferences = context.getSharedPreferences("UserPref", Context.MODE_PRIVATE)
         val gson = Gson()
