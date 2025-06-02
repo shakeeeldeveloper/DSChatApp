@@ -123,6 +123,7 @@ class ChatActivity : AppCompatActivity() {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val connected = snapshot.getValue(Boolean::class.java) ?: false
                 if (connected) {
+                    toast("Connected")
                     Log.d("NetworkStatus", "Connected to Firebase")
                 } else {
                     Log.d("NetworkStatus", "Disconnected from Firebase")
