@@ -8,6 +8,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ServerValue
 //import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
@@ -202,7 +203,14 @@ class AuthRepository {
             }
     }
     fun logOut(uid: String){
-        dbRef.child(uid).child("status").setValue("offline").addOnSuccessListener {
+        dbRef.child(uid).child("status").setValue("Offline").addOnSuccessListener {
+            Log.d("firebase","status changed")
+        }.addOnFailureListener {  e -> Log.d("firebase","status failed $e.message")}
+        dbRef.child(uid).child("lastSeen").setValue(ServerValue.TIMESTAMP)
+
+    }
+    fun logIn(uid: String){
+        dbRef.child(uid).child("status").setValue("Online").addOnSuccessListener {
             Log.d("firebase","status changed")
         }.addOnFailureListener {  e -> Log.d("firebase","status failed $e.message")}
 

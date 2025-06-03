@@ -22,7 +22,7 @@ class ChatListRepository {
         val chatListRef = chatsRef.child(currentUserId)
         val chatUserList = mutableListOf<UsersChat>()
 
-        chatListRef.addListenerForSingleValueEvent(object : ValueEventListener {
+        chatListRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (!snapshot.exists()) {
                     callback(emptyList())
@@ -38,6 +38,7 @@ class ChatListRepository {
                  //   val timeStamp = chatSnap.child("timeStamp").getValue(String::class.java)?.toLongOrNull() ?: 0L
                     val timeStamp = chatSnap.child("timeStamp").getValue(Long::class.java) ?: 0L
 
+                    chatUserList.clear()
 
 
                     usersRef.child(receiverId)

@@ -10,6 +10,8 @@ data class User(
     val password: String = "",
     val profilePicUrl: String = "",
     val phone: String = "",
-    val status: String = ""
-):  Parcelable
+    val status: String = "",
+    val lastSeen: Long  = System.currentTimeMillis()
+
+    ):  Parcelable
 

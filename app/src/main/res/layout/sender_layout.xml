@@ -4,13 +4,14 @@
     android:layout_height="wrap_content"
     android:padding="8dp"
     android:gravity="end"
-    android:orientation="vertical">
+    android:orientation="horizontal">
+
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:maxWidth="300dp"
+        android:maxWidth="100dp"
 
         android:background="@drawable/bg_sender_msg"
         android:padding="12dp"
@@ -21,18 +22,29 @@
             android:id="@+id/msgTV"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Your message here"
+            android:text="You"
             android:textColor="#FFFFFF"
             android:textSize="16sp" />
 
-        <TextView
-            android:id="@+id/timeTV"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="3:45 PM"
-            android:textSize="12sp"
-            android:textColor="#CCCCCC"
-            android:layout_gravity="end"
-            android:layout_marginTop="4dp" />
+
+
+            <TextView
+                android:id="@+id/timeTV"
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginTop="4dp"
+
+                android:text="3:45 PM"
+                android:textColor="#CCCCCC"
+                android:textSize="12sp" />
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="end"
+
+                android:background="@drawable/tick_double" />
+
     </LinearLayout>
 </LinearLayout>

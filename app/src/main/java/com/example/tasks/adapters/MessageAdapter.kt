@@ -13,9 +13,14 @@ import java.util.Date
 import java.util.Locale
 
 
-class MessageAdapter(private val senderId: String) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class MessageAdapter(
+        private val senderId: String,
+        private val onMessageLongClick: (ChatMessage) -> Unit
+
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val messages = mutableListOf<ChatMessage>()
+
 
     fun submitList(newList: List<ChatMessage>) {
         messages.clear()
@@ -36,19 +41,33 @@ class MessageAdapter(private val senderId: String) : RecyclerView.Adapter<Recycl
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val message = messages[position]
-        (holder as MessageViewHolder).bind(message)
+        (holder as MessageViewHolder).bind(messages[position], onMessageLongClick)
+
+        //(holder as MessageViewHolder).bind(message)
     }
 
     override fun getItemCount() = messages.size
 
     class MessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        fun bind(message: ChatMessage) {
+        fun bind(message: ChatMessage, onLongClick: (ChatMessage) -> Unit) {
+
             itemView.findViewById<TextView>(R.id.msgTV).text = message.messageText
             val time=formatTimestamp(message.timeStamp).toString()
-          //  Log.d("ChatActivity", "Observed ${message.timeStamp}   messages")
+            //  Log.d("ChatActivity", "Observed ${message.timeStamp}   messages")
 
-           itemView.findViewById<TextView>(R.id.timeTV).text= time.toString()
+            itemView.findViewById<TextView>(R.id.timeTV).text= time.toString()
+
+            if (message.isDeletedForSender || message.isDeletedForReceiver) "Message deleted" else message.messageText
+
+            itemView.setOnLongClickListener {
+                onLongClick(message)
+                true
+            }
         }
+
+
+
+
         fun formatTimestamp(timestamp: Long): String {
             val sdf = SimpleDateFormat("hh:mm a", Locale.getDefault())  // e.g., "03:45 PM"
             val formattedTime = sdf.format(Date(timestamp))

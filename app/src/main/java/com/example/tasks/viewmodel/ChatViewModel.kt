@@ -37,7 +37,13 @@ class ChatViewModel () : ViewModel() {
     fun sendMessage(senderId: String, receiverId: String, text: String) {
         repository.sendMessage(senderId, receiverId, text)
     }
+    fun deleteForMe(senderId: String, receiverId: String, messageId: String, isSender: Boolean) {
+        repository.deleteMessageForMe(senderId, receiverId, messageId)
+    }
 
+    fun deleteForBoth(senderId: String, receiverId: String, messageId: String) {
+        repository.deleteMessageForBoth(senderId, receiverId, messageId)
+    }
     fun loadReceiverUser(userId: String) {
         repository.getUserById(userId) { user ->
             user?.let {

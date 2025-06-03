@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -69,8 +70,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun observeViewModel() {
         chatListViewModel.chatList.observe(this) { chatUsers ->
+
             adapter.submitList(chatUsers)
         }
+
     }
 
     private fun setupRecyclerView() {
@@ -91,9 +94,10 @@ class MainActivity : AppCompatActivity() {
 
         currentUser=getUser(this@MainActivity)!!
         currentUser.let {
-            binding.tvWelcome.text="${currentUser.fullName.toString()}"
+            binding.textUserName.text= currentUser.fullName.toString()
         }
         chatListViewModel = ViewModelProvider(this)[ChatListViewModel::class.java]
+
 
         //val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: return
         chatListViewModel.loadChatList(currentUser.uid)
@@ -102,7 +106,7 @@ class MainActivity : AppCompatActivity() {
 
 
         viewModel = ViewModelProvider(this)[AuthViewModel::class.java]
-
+        viewModel.logIn(currentUser.uid)
 
         auth = FirebaseAuth.getInstance()
 
@@ -120,18 +124,43 @@ class MainActivity : AppCompatActivity() {
 
     }
     fun clickListener(){
-        binding.btnLogout.setOnClickListener {
+        binding.iconLogout.setOnClickListener {
             auth.signOut()
 
             Toast.makeText(this, "Signed out", Toast.LENGTH_SHORT).show()
 
             googleSignInClient.signOut().addOnCompleteListener {
-                clearUser(this@MainActivity)
+                clearUser(this@MainActivity) // sharedpreference
                 viewModel.logOut(currentUser.uid)
                 startActivity(Intent(this, LoginActivity::class.java))
                 finish()
             }
         }
+        binding.btnBack.setOnClickListener {
+
+                viewModel.logOut(currentUser.uid)
+                finish()
+
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        Log.d("onDes","destroy")
+        viewModel.logOut(currentUser.uid)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Log.d("onPause","destroy")
+        viewModel.logOut(currentUser.uid)
+    }
+
+    override fun onRestart() {
+        super.onRestart()
+        Log.d("onRestart","destroy")
+        viewModel.logIn(currentUser.uid)
     }
     fun parseUser(context: Context, user: User): User? {
         val gson = Gson()

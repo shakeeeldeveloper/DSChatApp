@@ -82,6 +82,10 @@ class AuthViewModel : ViewModel() {
         authRepo.logOut(uid)
 
     }
+    fun logIn(uid: String){
+        authRepo.logIn(uid)
+
+    }
 
     fun isUserLoggedIn() = authRepo.isUserLoggedIn()
     fun getCurrentUserId() = authRepo.getCurrentUserId()
