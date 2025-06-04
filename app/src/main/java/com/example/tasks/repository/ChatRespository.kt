@@ -1,13 +1,19 @@
 package com.example.tasks.repository
 
 import android.util.Log
-import com.bumptech.glide.Glide.init
-import com.google.firebase.database.FirebaseDatabase
 import com.example.tasks.model.ChatMessage
 import com.example.tasks.model.User
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import java.net.HttpURLConnection
+import java.net.URL
+import kotlin.concurrent.thread
+import android.content.Context
+import com.example.tasks.model.NotificationModel
+import com.example.tasks.viewmodel.NotificationViewModel
+
 
 class ChatRepository {
 
@@ -20,6 +26,7 @@ class ChatRepository {
     fun listenForMessages(
         currentUserId: String,
         otherUserId: String,
+        context: Context,
         callback: (List<ChatMessage>) -> Unit
     ) {
         val messagesRef = FirebaseDatabase.getInstance()
@@ -55,6 +62,7 @@ class ChatRepository {
                             messageList.add(message)
 
                         }
+                       // NotificationHelper.showNotification(context, message)
 
                        /* if (!deletedForCurrentUser) {
                             messageList.add(message)
@@ -113,11 +121,112 @@ class ChatRepository {
 
         senderRef.setValue(message)
         receiverRef.setValue(message)
-         val db1 = FirebaseDatabase.getInstance()
+         val chatListDb = FirebaseDatabase.getInstance()
 
-        db1.getReference("UserChats").child(senderId).child(receiverId).updateChildren(lastMsgMap)
-        db1.getReference("UserChats").child(receiverId).child(senderId).updateChildren(lastMsgMap)
+        chatListDb.getReference("UserChats").child(senderId).child(receiverId).updateChildren(lastMsgMap).addOnSuccessListener {
+            Log.d("notification", "Notification SAVE successfully.")
+
+            val notificationId = FirebaseDatabase.getInstance().reference.push().key
+
+            val notificationDb = FirebaseDatabase.getInstance().getReference("Notifications")
+            val newNotification= NotificationModel(
+                senderId=senderId,
+                receiverId=receiverId,
+                msg=messageText
+            )
+
+            notificationDb.child(notificationId.toString()).setValue(newNotification)
+
+        }
+        chatListDb.getReference("UserChats").child(receiverId).child(senderId).updateChildren(lastMsgMap)
+        //notifyReceiver(senderId, receiverId, messageText)
     }
+
+
+    fun notifyReceiver(senderId: String, receiverId: String, messageText: String) {
+        val url = URL("https://my-vercel-project-self.vercel.app/api/index") // update to your actual URL
+
+        thread {
+            try {
+                val jsonBody = """
+                {
+                    "senderId": "$senderId",
+                    "receiverId": "$receiverId",
+                    "messageText": "$messageText"
+                }
+            """.trimIndent()
+
+                val conn = url.openConnection() as HttpURLConnection
+                conn.requestMethod = "POST"
+                conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8")
+                conn.doOutput = true
+
+                conn.outputStream.use { os ->
+                    val input = jsonBody.toByteArray(Charsets.UTF_8)
+                    os.write(input, 0, input.size)
+                }
+
+                val responseCode = conn.responseCode
+                val responseMessage = conn.inputStream.bufferedReader().use { it.readText() }
+
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    Log.d("notification", "Notification sent successfully.")
+
+                    println("Notification sent successfully.")
+                } else {
+                    Log.d("notification", "Failed to send notification. Response code: $responseCode")
+                    Log.d("notification", "Response message: $responseMessage")
+
+                    println("Failed to send notification. Response code: $responseCode")
+                    println("Response message: $responseMessage")
+                }
+
+                conn.disconnect()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }/**/
+
+/*
+    fun notifyReceiver(senderId: String, receiverId: String, messageText: String) {
+        val url = URL("https://my-vercel-project-self.vercel.app/api/index") // replace with your Vercel URL
+
+        thread {
+            try {
+                val jsonBody = JSONObject()
+                jsonBody.put("senderId", senderId)
+                jsonBody.put("receiverId", receiverId)
+                jsonBody.put("messageText", messageText)
+
+                val conn = url.openConnection() as HttpURLConnection
+                conn.requestMethod = "POST"
+                conn.setRequestProperty("Content-Type", "application/json")
+                conn.doOutput = true
+
+                val outputWriter = OutputStreamWriter(conn.outputStream)
+                outputWriter.write(jsonBody.toString())
+                outputWriter.flush()
+                outputWriter.close()
+
+                val responseCode = conn.responseCode
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    Log.d("notification", "Notification sent successfully.")
+                    //println("Notification sent successfully.")
+                } else {
+                    Log.d("notification", "Failed to send notification. Response code: $responseCode")
+
+                   // println("Failed to send notification. Response code: $responseCode")
+                }
+
+                conn.disconnect()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+*/
+
     fun setStatus(status: String, uid: String) {
          val userRef = FirebaseDatabase.getInstance().getReference("users").child(uid)
 

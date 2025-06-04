@@ -1,21 +1,16 @@
 package com.example.tasks.ui
 
+import android.Manifest
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
-import android.os.Looper
-import android.text.Editable
-import android.text.TextWatcher
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
+import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.tasks.R
@@ -23,21 +18,13 @@ import com.example.tasks.adapters.MessageAdapter
 import com.example.tasks.databinding.ActivityChatBinding
 import com.example.tasks.model.ChatMessage
 import com.example.tasks.model.User
-import com.example.tasks.ui.LoginActivity
-import com.example.tasks.ui.MainActivity
 import com.example.tasks.viewmodel.AuthViewModel
-import com.example.tasks.viewmodel.ChatListViewModel
 import com.example.tasks.viewmodel.ChatViewModel
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.Transaction.Handler
 import com.google.firebase.database.ValueEventListener
 import com.google.gson.Gson
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -115,8 +102,20 @@ class ChatActivity : AppCompatActivity() {
         Log.d("onRestart","destroy")
         viewModel.logIn(currentUser.uid)
     }
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
+    fun showNotification(context: Context, message: String) {
+        val builder = NotificationCompat.Builder(context, "chat_channel")
+            .setSmallIcon(R.drawable.devsky_logo)
+            .setContentTitle("New Message")
+            .setContentText(message)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+
+        val notificationManager = NotificationManagerCompat.from(context)
+        notificationManager.notify(1, builder.build())
+    }
+
     private fun observeMessages() {
-        chatViewModel.loadMessages(senderId!!, receiverId!!)
+        chatViewModel.loadMessages(senderId!!, receiverId!!, this)
         chatViewModel.messages.observe(this) { messages ->
             Log.d("ChatActivity", "Observed ${messages.size} messages")
 
@@ -185,6 +184,7 @@ class ChatActivity : AppCompatActivity() {
             if (text.isNotEmpty()) {
                 chatViewModel.sendMessage(senderId!!, receiverId!!, text)
                 binding.editTextMessage.text.clear()
+                //showNotification(this@ChatActivity,te)
 
             }
         }
@@ -210,7 +210,7 @@ class ChatActivity : AppCompatActivity() {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val connected = snapshot.getValue(Boolean::class.java) ?: false
                 if (connected) {
-                    toast("Connected")
+                  //  toast("Connected")
                     Log.d("NetworkStatus", "Connected to Firebase")
                 } else {
                     Log.d("NetworkStatus", "Disconnected from Firebase")

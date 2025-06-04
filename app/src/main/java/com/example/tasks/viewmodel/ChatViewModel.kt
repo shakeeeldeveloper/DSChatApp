@@ -1,18 +1,12 @@
 package com.example.tasks.viewmodel
 
-import android.net.Uri
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.tasks.model.ChatMessage
 import com.example.tasks.model.User
-import com.example.tasks.model.UsersChat
-import com.example.tasks.repository.AuthRepository
-import com.example.tasks.repository.ChatListRepository
 import com.example.tasks.repository.ChatRepository
-import com.example.tasks.ui.SignUpActivity
-import com.google.firebase.auth.FirebaseAuth
-
 
 
 class ChatViewModel () : ViewModel() {
@@ -28,8 +22,8 @@ class ChatViewModel () : ViewModel() {
     private val _messages = MutableLiveData<List<ChatMessage>>()
     val messages: LiveData<List<ChatMessage>> = _messages
 
-    fun loadMessages(senderId: String, receiverId: String) {
-        repository.listenForMessages(senderId, receiverId) { chatMessages ->
+    fun loadMessages(senderId: String, receiverId: String, context: Context) {
+        repository.listenForMessages(senderId, receiverId,context) { chatMessages ->
             _messages.value = chatMessages
         }
     }

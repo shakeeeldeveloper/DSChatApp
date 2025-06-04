@@ -3,11 +3,16 @@ package com.example.tasks.ui
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.example.tasks.databinding.ActivityMainBinding
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -23,6 +28,8 @@ import com.bumptech.glide.Glide
 import com.example.tasks.adapters.ChatListAdapter
 import com.example.tasks.viewmodel.AuthViewModel
 import com.example.tasks.viewmodel.ChatListViewModel
+import android.Manifest
+import com.example.tasks.viewmodel.NotificationViewModel
 
 
 class MainActivity : AppCompatActivity() {
@@ -34,6 +41,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var viewModel: AuthViewModel
     private lateinit var chatListViewModel: ChatListViewModel
+    private lateinit var notificationViewModel: NotificationViewModel
+
 
     // Firebase
     private lateinit var auth: FirebaseAuth
@@ -48,7 +57,24 @@ class MainActivity : AppCompatActivity() {
     private lateinit var adapter: ChatListAdapter
 
 
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (!isGranted) {
+                Toast.makeText(this, "Notification permission denied", Toast.LENGTH_SHORT).show()
+            }
+        }
 
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -60,6 +86,7 @@ class MainActivity : AppCompatActivity() {
         clickListener()
         setupRecyclerView()
         observeViewModel()
+        requestNotificationPermission()
 
 
 
@@ -89,6 +116,22 @@ class MainActivity : AppCompatActivity() {
         binding.chatListRV.layoutManager = LinearLayoutManager(this)
         binding.chatListRV.adapter = adapter
     }
+   /* private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                    1001
+                )
+            }
+        }
+    }*/
+
 
     fun initViews(){
 
@@ -101,6 +144,9 @@ class MainActivity : AppCompatActivity() {
 
         //val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: return
         chatListViewModel.loadChatList(currentUser.uid)
+
+        notificationViewModel = ViewModelProvider(this)[NotificationViewModel::class.java]
+        notificationViewModel.startNotificationListener(currentUser.uid,this)
 
 
 
