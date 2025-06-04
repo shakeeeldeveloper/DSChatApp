@@ -2,49 +2,59 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="8dp"
     android:gravity="end"
-    android:orientation="horizontal">
+    android:orientation="vertical"
+    android:padding="8dp">
 
-
-    <LinearLayout
+    <FrameLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:maxWidth="100dp"
+        android:layout_marginStart="50dp"
+        android:layout_marginEnd="4dp">
 
-        android:background="@drawable/bg_sender_msg"
-        android:padding="12dp"
-        android:elevation="2dp"
-        android:layout_marginBottom="4dp">
-
-        <TextView
-            android:id="@+id/msgTV"
+        <LinearLayout
+            android:id="@+id/bubbleLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="You"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
-
-
+            android:orientation="vertical"
+            android:background="@drawable/bg_sender_msg"
+            android:padding="10dp"
+            android:elevation="2dp">
 
             <TextView
-                android:id="@+id/timeTV"
-                android:layout_width="60dp"
+                android:id="@+id/msgTV"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:maxWidth="250dp"
+                android:text="This is a lines aorrectly."
+                android:textColor="@android:color/white"
+                android:textSize="16sp" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
                 android:layout_gravity="end"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="4dp">
 
-                android:text="3:45 PM"
-                android:textColor="#CCCCCC"
-                android:textSize="12sp" />
+                <TextView
+                    android:id="@+id/timeTV"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="10:45"
+                    android:textSize="12sp"
+                    android:textColor="@android:color/white"
 
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_gravity="end"
+                    android:layout_marginEnd="4dp" />
 
-                android:background="@drawable/tick_double" />
-
-    </LinearLayout>
+                <ImageView
+                    android:id="@+id/imageTick"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/tick_double"
+                    android:contentDescription="Tick Icon"
+                     />
+            </LinearLayout>
+        </LinearLayout>
+    </FrameLayout>
 </LinearLayout>
