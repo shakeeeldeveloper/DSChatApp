@@ -4,14 +4,21 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat.startActivityForResult
+import androidx.core.content.ContextCompat.startActivity
 import androidx.core.content.edit
 import androidx.lifecycle.ViewModelProvider
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.example.tasks.R
 import com.example.tasks.databinding.ActivityLoginBinding
 import com.example.tasks.model.User
 import com.example.tasks.viewmodel.AuthViewModel
+import com.example.tasks.worker.PollingWorker
 import com.google.android.gms.auth.api.signin.*
 import com.google.android.gms.common.api.ApiException
 import com.google.gson.Gson
@@ -66,7 +73,9 @@ class LoginActivity : AppCompatActivity() {
             val intent = Intent(this, MainActivity::class.java)
 
             with(intent){
+                val userda: User=getUser(this@LoginActivity)!!
 
+                startPollingWork(this@LoginActivity as Context, userda?.uid.toString(), userda?.fullName.toString())
                 putExtra("IS_LOGGED_IN",true)
                 putExtra("user_data", getUser(this@LoginActivity))
                 putExtra("login_source","sharedpref")
@@ -102,7 +111,7 @@ class LoginActivity : AppCompatActivity() {
             if (email.isEmpty() || password.isEmpty()) {
                 toast("Email and password are required")
             } else {
-                toast("Login press")
+              //  toast("Login press")
               viewModel.manualLogin(email, password)
             }
         }
@@ -145,6 +154,10 @@ class LoginActivity : AppCompatActivity() {
                     putString("user_data", userJson)
                     apply()
                     startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                    Log.d("MyWorker", "In Ac")
+
+                    startPollingWork(this as Context, viewModel.getCurrentUser()?.uid.toString(), viewModel.getCurrentUser()?.fullName.toString())
+
                 }
               /*  val intent = Intent(this, MainActivity::class.java)
 
@@ -202,6 +215,10 @@ class LoginActivity : AppCompatActivity() {
                     putString("user_data", userJson)
                     apply()
                     startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                    Log.d("MyWorker", "In Ac")
+
+                    startPollingWork(this as Context, user?.uid.toString(), user?.fullName.toString() )
+
                 }
                 /*  val intent = Intent(this, MainActivity::class.java)
 
@@ -219,7 +236,13 @@ class LoginActivity : AppCompatActivity() {
         }
 
     }
+    fun startPollingWork(context: Context, userId: String, userNname: String) {
+        val workRequest = OneTimeWorkRequestBuilder<PollingWorker>()
+            .setInputData(workDataOf("userId" to userId, "userName" to userNname))
+            .build()
 
+        WorkManager.getInstance(context).enqueue(workRequest)
+    }
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 

@@ -24,7 +24,7 @@ class NotificationRepository {
                     if (notification.receiverId == currentUID) {
                         Log.d("notification", "Notification push successfully.")
 
-                        NotificationHelper.showNotification(context, it)
+                       // NotificationHelper.showNotification(context, it)
                         val deleteRef = FirebaseDatabase.getInstance()
                             .getReference("Notifications")
                             .child(snapshot.key.toString())

@@ -9,12 +9,11 @@ import android.content.pm.PackageManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import com.example.tasks.R
 import com.example.tasks.model.NotificationModel
 import com.example.tasks.ui.ChatActivity  // Change to your actual package
 
 object NotificationHelper {
-    fun showNotification(context: Context, message: NotificationModel) {
+    fun showNotification(context: Context, message: NotificationModel, userName: String) {
         val channelId = "chat_notification_channel"
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -47,7 +46,7 @@ object NotificationHelper {
 
             val notification = NotificationCompat.Builder(context, channelId)
                 .setSmallIcon(R.drawable.devsky_logo) // Replace with your icon
-                .setContentTitle("New Message")
+                .setContentTitle(userName.toString())
                 .setContentText(message.msg)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true)

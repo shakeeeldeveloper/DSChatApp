@@ -9,6 +9,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ServerValue
+import com.google.firebase.messaging.FirebaseMessaging
 //import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
@@ -151,6 +152,15 @@ class AuthRepository {
                         exists = true
 
                         user = userSnapshot.getValue(User::class.java)!!
+                        /*FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                val token = task.result
+                                FirebaseDatabase.getInstance().getReference("Users")
+                                    .child(user.uid)
+                                    .child("fcmToken")
+                                    .setValue(token)
+                            }
+                        }*/
 
                         dbRef.child(user.uid).child("status").setValue("online")
                         break
