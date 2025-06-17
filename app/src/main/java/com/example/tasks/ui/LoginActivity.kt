@@ -8,6 +8,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat.startActivityForResult
+import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.startActivity
 import androidx.core.content.edit
 import androidx.lifecycle.ViewModelProvider
@@ -17,6 +18,7 @@ import androidx.work.workDataOf
 import com.example.tasks.R
 import com.example.tasks.databinding.ActivityLoginBinding
 import com.example.tasks.model.User
+import com.example.tasks.service.FirebaseForegroundService
 import com.example.tasks.viewmodel.AuthViewModel
 import com.example.tasks.worker.PollingWorker
 import com.google.android.gms.auth.api.signin.*
@@ -75,7 +77,9 @@ class LoginActivity : AppCompatActivity() {
             with(intent){
                 val userda: User=getUser(this@LoginActivity)!!
 
-                startPollingWork(this@LoginActivity as Context, userda?.uid.toString(), userda?.fullName.toString())
+             //   startPollingWork(this@LoginActivity as Context, userda?.uid.toString(), userda?.fullName.toString())
+
+
                 putExtra("IS_LOGGED_IN",true)
                 putExtra("user_data", getUser(this@LoginActivity))
                 putExtra("login_source","sharedpref")
@@ -154,9 +158,14 @@ class LoginActivity : AppCompatActivity() {
                     putString("user_data", userJson)
                     apply()
                     startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                    finish()
                     Log.d("MyWorker", "In Ac")
+                    val intent = Intent(this@LoginActivity, FirebaseForegroundService::class.java)
+                    intent.putExtra("USER_ID", viewModel.getCurrentUser()?.uid.toString())
+                    intent.putExtra("userName",viewModel.getCurrentUser()?.fullName.toString())
 
-                    startPollingWork(this as Context, viewModel.getCurrentUser()?.uid.toString(), viewModel.getCurrentUser()?.fullName.toString())
+                    ContextCompat.startForegroundService(this@LoginActivity, intent)
+                   // startPollingWork(this as Context, viewModel.getCurrentUser()?.uid.toString(), viewModel.getCurrentUser()?.fullName.toString())
 
                 }
               /*  val intent = Intent(this, MainActivity::class.java)
@@ -214,10 +223,24 @@ class LoginActivity : AppCompatActivity() {
                     val userJson = gson.toJson(user)
                     putString("user_data", userJson)
                     apply()
+
+
+                    //run service for new message
+                    // startPollingWork(this as Context, user?.uid.toString(), user?.fullName.toString() )
+
+
+                    val intent = Intent(this@LoginActivity, FirebaseForegroundService::class.java)
+                    intent.putExtra("USER_ID", viewModel.getCurrentUser()?.uid.toString())
+                    intent.putExtra("userName",viewModel.getCurrentUser()?.fullName.toString())
+                    ContextCompat.startForegroundService(this@LoginActivity, intent)
+
+
+
                     startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                    finish()
                     Log.d("MyWorker", "In Ac")
 
-                    startPollingWork(this as Context, user?.uid.toString(), user?.fullName.toString() )
+
 
                 }
                 /*  val intent = Intent(this, MainActivity::class.java)
@@ -236,9 +259,9 @@ class LoginActivity : AppCompatActivity() {
         }
 
     }
-    fun startPollingWork(context: Context, userId: String, userNname: String) {
+    fun startPollingWork(context: Context, userId: String, userName: String) {
         val workRequest = OneTimeWorkRequestBuilder<PollingWorker>()
-            .setInputData(workDataOf("userId" to userId, "userName" to userNname))
+            .setInputData(workDataOf("userId" to userId, "userName" to userName))
             .build()
 
         WorkManager.getInstance(context).enqueue(workRequest)

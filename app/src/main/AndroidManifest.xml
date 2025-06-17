@@ -25,9 +25,7 @@
         <activity
             android:name=".ui.SignUpActivity"
             android:exported="false" />
-        <activity
-            android:name=".ui.StaffActivity"
-            android:exported="false" />
+
         <activity
             android:name=".ui.LoginActivity"
             android:exported="true">
@@ -42,6 +40,11 @@
         <activity
             android:name=".ui.MainActivity"
             android:exported="false" />
+        <service
+            android:name=".service.FirebaseForegroundService"
+            android:foregroundServiceType="dataSync"
+            android:exported="false" />
+
     </application>
 
 </manifest>

@@ -29,6 +29,8 @@ import com.example.tasks.adapters.ChatListAdapter
 import com.example.tasks.viewmodel.AuthViewModel
 import com.example.tasks.viewmodel.ChatListViewModel
 import android.Manifest
+import com.example.tasks.service.FirebaseForegroundService
+import com.example.tasks.ui.LoginActivity
 import com.example.tasks.viewmodel.NotificationViewModel
 
 
@@ -135,6 +137,9 @@ class MainActivity : AppCompatActivity() {
 
     fun initViews(){
 
+
+
+
         currentUser=getUser(this@MainActivity)!!
         currentUser.let {
             binding.textUserName.text= currentUser.fullName.toString()
@@ -152,6 +157,14 @@ class MainActivity : AppCompatActivity() {
 
 
         viewModel = ViewModelProvider(this)[AuthViewModel::class.java]
+
+        //run service for message check
+        val intent = Intent(this@MainActivity, FirebaseForegroundService::class.java)
+        intent.putExtra("USER_ID", currentUser.uid.toString())
+        intent.putExtra("userName",currentUser.fullName.toString())
+        ContextCompat.startForegroundService(this@MainActivity, intent)
+
+
         viewModel.logIn(currentUser.uid)
 
         auth = FirebaseAuth.getInstance()
